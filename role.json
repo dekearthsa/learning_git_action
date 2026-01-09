@@ -1,0 +1,19 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "GitHubActionsDeploySpecificLambdas",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:GetFunction",
+                "lambda:GetFunctionConfiguration",
+                "lambda:UpdateFunctionCode",
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:PublishVersion"
+            ],
+            "Resource": [
+                "arn:aws:lambda:ap-southeast-1:913524941488:function:lambda_git_action" // arn lambda ของเรา
+            ]
+        }
+    ]
+}

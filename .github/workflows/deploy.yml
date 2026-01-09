@@ -7,16 +7,17 @@ on:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted, macOS, ARM64] ## อย่าลืมเปลี่ยนตามระบบของเรา
     timeout-minutes: 30
 
     strategy:
       fail-fast: false
       matrix:
         fn:
-          - name: lambda_git_action
-            path: .
+          - name: lambda_git_action # ชื่อ Lambda ของเรา
+            path: . # path wkdir
     steps:
+      ## workflows ของเราใส่ตรงนี้ว่าจะให้ทำอะไรบ้าง จะให้ test deploy อะไรตรงนี้
       - name: Checkout
         uses: actions/checkout@v4
 
