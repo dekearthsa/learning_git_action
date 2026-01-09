@@ -1,0 +1,66 @@
+name: Deploy Lambdas
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        fn:
+          - name: lambda_git_action
+            path: .
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Verify function folder exists
+        run: |
+          if [ ! -d "${{ matrix.fn.path }}" ]; then
+            echo "Folder not found: ${{ matrix.fn.path }}"
+            ls -la
+            exit 1
+          fi
+
+      - name: Install deps (if package.json exists)
+        run: |
+          cd "${{ matrix.fn.path }}"
+          if [ -f package.json ]; then
+            npm ci --omit=dev
+          else
+            echo "No package.json - skip npm ci"
+          fi
+
+      - name: Create zip (to workspace root)
+        run: |
+          set -e
+          ZIP_PATH="$GITHUB_WORKSPACE/function.zip"
+          rm -f "$ZIP_PATH"
+          cd "${{ matrix.fn.path }}"
+          zip -r "$ZIP_PATH" . \
+            -x ".git/*" ".github/*" "*.zip" "test/*" "tests/*" "__tests__/*" ".DS_Store"
+          ls -lh "$ZIP_PATH"
+
+      - name: Deploy to Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name "${{ matrix.fn.name }}" \
+            --zip-file "fileb://$GITHUB_WORKSPACE/function.zip"
