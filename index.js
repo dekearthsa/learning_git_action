@@ -1,4 +1,4 @@
-import axios from axios;
+import axios from 'axios';
 
 export const handler = async (event) => {
     const raw = axios.get("https://c55bf3ed7453.ngrok-free.app");
